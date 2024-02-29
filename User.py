@@ -43,10 +43,7 @@ class User:
         return len(self.followers)
 
     def check_password(self, password):
-        if password != self._password:
-            return False
-        else:
-            return True
+        return password == self._password
 
     def print_notifications(self):
         print(self.username + "'s notifications:")

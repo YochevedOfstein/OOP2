@@ -1,5 +1,3 @@
-
-
 import matplotlib.pyplot as plt
 from Notifications import Notifications, LikeNotifications, CommentNotifications
 
@@ -14,16 +12,20 @@ class Post:
         self.comments = []
 
     def like(self, user):
-        self.likes.append(user)
-        note = LikeNotifications(user, self.owner)
-        self.owner.receive_notification(note)
-        print("notification to " + self.owner.username + ": " + user.username + " liked your post")
+        if user.logged_in:
+            self.likes.append(user)
+            note = LikeNotifications(user, self.owner)
+            if user != self.owner:
+                self.owner.receive_notification(note)
+                print("notification to " + self.owner.username + ": " + user.username + " liked your post")
 
     def comment(self, user, text):
-        self.comments.append(user)
-        note = CommentNotifications(user, self.owner)
-        self.owner.receive_notification(note)
-        print("notification to " + self.owner.username + ": " + user.username + " commented on your post: " + text)
+        if user.logged_in:
+            self.comments.append(user)
+            note = CommentNotifications(user, self.owner)
+            if user != self.owner:
+                self.owner.receive_notification(note)
+                print("notification to " + self.owner.username + ": " + user.username + " commented on your post: " + text)
 
 
 class TextPost(Post):
@@ -62,29 +64,25 @@ class SalePost(Post):
         super().__init__(owner, post_type, post)
         self.price = price
         self.address = address
-        self.sold_items = []
+        self.is_sold = False
 
     def discount(self, discount, password):
-        if self.owner.check_password(password):
-            if discount < 0 or discount > 100:
-                print("invalid discount")
-                return
-            self.price = self.price - ((discount * self.price) / 100)
-            print("Discount on " + self.owner.username + " product! the new price is: " + str(self.price))
+        if self.owner.logged_in:
+            if self.owner.check_password(password):
+                if discount < 0 or discount > 100:
+                    print("invalid discount")
+                    return
+                self.price = self.price - ((discount * self.price) / 100)
+                print("Discount on " + self.owner.username + " product! the new price is: " + str(self.price))
 
     def sold(self, password):
         if self.owner.check_password(password):
             print(self.owner.username + "'s product is sold")
-            self.sold_items.append(self)
-
-    def check_if_sold(self):
-        for post in self.sold_items:
-            return True
-        return False
+            self.is_sold = True
 
     def __str__(self):
         result = f"{self.owner.username} posted a product for sale:\n"
-        if self.check_if_sold() is True:
+        if self.is_sold:
             result += "Sold! "
         else:
             result += "For sale! "
